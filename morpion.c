@@ -11,12 +11,20 @@ typedef struct	s_morpion
 {
 	char	turn;
 	char	**grid;
+	char	**savegrid;
 	char	*line;
 	int	size;
 	int	AI;
 	int	game;
 	int	choice;
 }		t_morpion;
+
+typedef struct	s_AI
+{
+	int	step;
+	int	nchoice;
+	int	*choice;
+}		t_AI;
 
 void	init(t_morpion *var)
 {
@@ -57,13 +65,24 @@ void	ft_print_grid(t_morpion *var)
 	ft_putchar(var->grid[2][2]);
 	ft_putstr("\n\n");
 }
-/*
-O|X|
------
- | |
------
- | |
-*/
+
+int	ft_n_empty(char **grid)
+{
+	int	i;
+	int	j;
+	int	count;
+
+	count = 0;
+	i = -1;
+	while (grid[++i])
+	{
+		j = -1;
+		while (grid[i][++j])
+			if (grid[i][j] == ' ')
+				count++;
+	}
+	return (count);
+}
 
 int	ft_end(t_morpion *var)
 {
@@ -86,12 +105,68 @@ int	ft_end(t_morpion *var)
 	return (0);
 }
 
-void	ft_AI_turn(t_morpion *var)
+void	fill_i(t_morpion *var, int n, char player)
 {
-	
+	int i;
+	int j;
+	int count;
+
+	count = 1; 
+	i = -1;
+	while (var->grid[++i])
+	{
+		j = -1;
+		while (var->grid[i][++j])
+		{
+			if (var->grid[i][j] == ' ' && count == n)
+				var->grid[i][j] = player;
+			else if (var->grid[i][j] == ' ')
+				count++;
+		}	
+	}
 }
 
-void	morpion(t_morpion *var)
+int	ft_eval(t_morpion *var)
+{
+
+}
+
+int	ft_previsions(t_morpion *var, char **grid, t_AI *AI, int choice)
+{
+	int	npos;
+	int	sum;
+	int	i;
+
+	i = -1;
+	sum = 0;
+	npos = ft_n_empt(grid);
+	AI->step++;
+	while (++i < npos)
+	{
+		if (AI->step == var->AI)
+			sum += ft_previsions(var, grid, AI, i);	
+		else
+			sum += ft_eval(var);
+	}
+	AI->step--;
+	return (sum);
+}
+
+int	ft_AI_turn(t_morpion *var, t_AI *AI)
+{
+	int	i;
+
+	i = -1;
+	while (++i < AI->nchoice)
+	{
+		AI->step = 0;
+		AI->savegrid 
+		AI->choice[i] = previsions(var, var->grid, AI, i);
+	}
+
+}
+
+void	morpion(t_morpion *var, t_AI *AI)
 {
 	int firsttry;
 
@@ -119,7 +194,9 @@ void	morpion(t_morpion *var)
 		}
 		else
 		{
-			ft_AI_turn(var);
+			AI->nchoice = ft_n_empty(var->grid);
+			AI->choice = (int *)malloc(sizeof(int) * AI->pos);
+			ft_AI_turn(var, AI);
 			ft_putendl("AI has played :");
 			ft_print_grid(var);
 		}
@@ -133,6 +210,7 @@ void	morpion(t_morpion *var)
 int	main(int ac, char **av)
 {
 	t_morpion	var;
+	t_AI		AI;
 	float		rand;
 
 	if (ac == 2 && (var.AI = ft_atoi(av[1])) != 0 &&
@@ -140,7 +218,7 @@ int	main(int ac, char **av)
 	{
 		init(&var);
 		var.turn = (random() % 2 ? 'X' : 'O');
-		morpion(&var);
+		morpion(&var, &AI);
 		printf("%i\n", var.game);
 	}
 	else
