@@ -16,14 +16,13 @@ typedef struct	s_morpion
 	int	size;
 	int	AI;
 	int	game;
-	int	choice;
 }		t_morpion;
 
 typedef struct	s_AI
 {
 	int	step;
 	int	nchoice;
-	int	*choice;
+	int	*choices;
 }		t_AI;
 
 void	init(t_morpion *var)
@@ -105,7 +104,7 @@ int	ft_end(t_morpion *var)
 	return (0);
 }
 
-void	fill_i(t_morpion *var, int n, char player)
+void	fill_i(char ***grid, int n, char turn)
 {
 	int i;
 	int j;
@@ -113,57 +112,90 @@ void	fill_i(t_morpion *var, int n, char player)
 
 	count = 1; 
 	i = -1;
-	while (var->grid[++i])
+	while (*grid[++i])
 	{
 		j = -1;
-		while (var->grid[i][++j])
+		while (*grid[i][++j])
 		{
-			if (var->grid[i][j] == ' ' && count == n)
-				var->grid[i][j] = player;
-			else if (var->grid[i][j] == ' ')
+			if (*grid[i][j] == ' ' && count == n)
+				*grid[i][j] = turn;
+			else if (*grid[i][j] == ' ')
 				count++;
 		}	
 	}
 }
 
-int	ft_eval(t_morpion *var)
+void	ft_gridcpy(char ***grid)
+{
+	char	**savegrid;
+	int	i;
+
+	savegrid = (char **)malloc(sizeof(char *) * (3 + 1));
+	savegrid[3] = NULL;
+	i = -1;
+	while (++i < 3)
+	{
+		savegrid[i] = ft_strnew(3);
+		ft_strcpy(savegrid[i], grid[i]);
+	}
+	return (savegrid);
+}
+
+int	ft_eval(char **grid)
 {
 
 }
 
-int	ft_previsions(t_morpion *var, char **grid, t_AI *AI, int choice)
+int	ft_previsions(t_morpion *var, char **grid, t_AI *AI, int choice, char turn)
 {
+	char	**savegrid;
 	int	npos;
 	int	sum;
 	int	i;
 
-	i = -1;
-	sum = 0;
-	npos = ft_n_empt(grid);
+	turn = (turn == 'O' ? 'X' : 'O');
 	AI->step++;
-	while (++i < npos)
-	{
-		if (AI->step == var->AI)
-			sum += ft_previsions(var, grid, AI, i);	
-		else
-			sum += ft_eval(var);
-	}
+	npos = ft_n_empt(grid);
+	savegrid = ft_gridcpy(grid);
+	sum = 0;
+	i = -1;
+	if (AI->step == var->AI)
+		sum = ft_eval(grid);
+	else
+		while (++i < npos)
+		{
+			fill_i(grid, i, var->turn);
+			sum += ft_previsions(var, grid, AI, i, turn);	
+			ft_gridcpy(&grid, &savegrid);
+		}
 	AI->step--;
 	return (sum);
 }
 
-int	ft_AI_turn(t_morpion *var, t_AI *AI)
+void	ft_AI_turn(t_morpion *var, t_AI *AI)
 {
 	int	i;
+	int	best;
+	int	besti;
 
+	AI->savegrid = ft_gridcpy(AI->grid);
+	best = 0;
 	i = -1;
 	while (++i < AI->nchoice)
 	{
-		AI->step = 0;
-		AI->savegrid 
-		AI->choice[i] = previsions(var, var->grid, AI, i);
+		//printf(step);
+		AI->step = -1;
+		fill_i(&var->grid, i, 'X');
+		AI->choices[i] = previsions(var, var->grid, AI, i, var->turn);
+		if (AI->choices[i] > best)
+		{
+			best = AI->choices[i];
+			besti = i;
+		}
+		AI->grid = ft_gridcpy(AI->savegrid);
 	}
-
+	//var->turn = 'X';
+	fill_i(&var->grid, besti, 'X');
 }
 
 void	morpion(t_morpion *var, t_AI *AI)
