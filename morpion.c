@@ -90,8 +90,6 @@ int	ft_n_empty(char **grid)
 int	ft_end(char **grid)
 {
 	//printf("CASES VIDES : %i\n", ft_n_empty(grid));
-	if (!ft_n_empty(grid))
-		return (1);
 	if (grid[0][0] == grid[0][1] && grid[0][0] == grid[0][2] && grid[0][0] != ' ')
 		return (1);
 	if (grid[1][0] == grid[1][1] && grid[1][0] == grid[1][2] && grid[1][0] != ' ')
@@ -270,7 +268,7 @@ int	morpion(t_morpion *var, t_AI *AI, int mode)
 	ft_print_grid(var);
 	srand(time(NULL));
 	var->turn = (random() % 2 ? 'X' : 'O');
-	while (!(var->game = ft_end(var->grid)))
+	while (!(var->game = ft_end(var->grid)) && ft_n_empty(var->grid))
 	{
 		var->turn = (var->turn == 'O' ? 'X' : 'O');
 		if (var->turn == 'O')
@@ -308,7 +306,7 @@ int	morpion(t_morpion *var, t_AI *AI, int mode)
 	}
 	if (var->turn == 'O')
 		ft_print_grid(var);
-	if (!ft_n_empty(var->grid))
+	if (!ft_n_empty(var->grid) && !ft_end(var->grid))
 		ft_putendl("Equality !");
 	else
 	{
