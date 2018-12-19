@@ -184,8 +184,8 @@ int	ft_eval(char **grid)
 					grade += 5* sign;
 			}
 	}
+	//printf("Final grade : %i\n", grade);
 	//grade = 0;
-	printf("Final grade : %i\n", grade);
 	return (grade);
 }
 
@@ -196,7 +196,7 @@ int	ft_previsions(t_morpion *var, char **grid, t_AI *AI, char turn)
 	int	sum;
 	int	i;
 
-	printf("Debut recursive\n");
+	//printf("Debut recursive\n");
 	turn = (turn == 'O' ? 'X' : 'O');
 	AI->step++;
 	npos = ft_n_empty(grid);
@@ -205,8 +205,8 @@ int	ft_previsions(t_morpion *var, char **grid, t_AI *AI, char turn)
 	i = -1;
 	if (AI->step == var->AI || npos == 0)
 	{
-		printf("Map recu pour l'evaluation : \n");
-		ft_print_grid(var);
+		//printf("Map recu pour l'evaluation : \n");
+		//ft_print_grid(var);
 		sum = ft_eval(grid);
 	}
 	else
@@ -223,7 +223,7 @@ int	ft_previsions(t_morpion *var, char **grid, t_AI *AI, char turn)
 			grid = ft_gridcpy(savegrid);
 		}
 	AI->step--;
-	printf("Fin d'une recursive\n");
+	//printf("Fin d'une recursive\n");
 	return (sum);
 }
 
@@ -233,7 +233,7 @@ void	ft_AI_turn(t_morpion *var, t_AI *AI)
 	int	best;
 	int	besti;
 
-	printf("Debut reflexion IA, savegrid : %p\n", AI->savegrid);
+	//printf("Debut reflexion IA, savegrid : %p\n", AI->savegrid);
 	if (AI->savegrid)
 		ft_griddel(&AI->savegrid);	
 	AI->savegrid = ft_gridcpy(var->grid);
@@ -241,19 +241,18 @@ void	ft_AI_turn(t_morpion *var, t_AI *AI)
 	i = -1;
 	while (++i < AI->nchoice)
 	{
-		printf("Pos. numéro : %i\t-\tNiveau reflexion : %i\n", i + 1, AI->step);
+		//printf("Pos. numéro : %i\t-\tNiveau reflexion : %i\n", i + 1, AI->step);
 		fill_i(&var->grid, i + 1, 'X');
 		if (ft_end(var->grid))
-			AI->choices[i] = 50000; //!8/8 = 5040 simulations ~= 30.000 grade. 50.000 > 30.000
+			AI->choices[i] = 1000000; //!8/8 = 5040 simulations ~= 30.000 grade. 50.000 > 30.000
 		else
 			AI->choices[i] = ft_previsions(var, var->grid, AI, var->turn);
 		if (AI->choices[i] > best || i == 0)
 		{
 			best = AI->choices[i];
 			besti = i;
-			printf("Best case : %i\n", besti + 1);
 		}
-		printf("Score de la branche : %i\n", AI->choices[i]);
+		//printf("Score de la branche : %i\n", AI->choices[i]);
 		ft_griddel(&var->grid);
 		var->grid = ft_gridcpy(AI->savegrid);
 	}
@@ -261,7 +260,6 @@ void	ft_AI_turn(t_morpion *var, t_AI *AI)
 	i = -1;
 	while (++i < AI->nchoice)
 		printf("Cases n°%i : %i\n", i, AI->choices[i]);
-	printf("Best case : %i\n", besti + 1);
 	fill_i(&var->grid, besti + 1, 'X');
 }
 
@@ -328,8 +326,6 @@ int	main(int ac, char **av)
 	int		pAI;
 	int		prandom;
 
-	//ft_test();
-	//return (0);
 	pAI = 0;
 	prandom = 0;
 	i = -1;
@@ -357,7 +353,7 @@ int	main(int ac, char **av)
 		}
 	}
 	else
-		ft_putstr("usage: ./morpion_AI strenght_of_AI[0;5]");
+		ft_putstr("usage: ./morpion_AI strenght_of_AI[0;5] [n_match]");
 	ft_putchar('\n');
 	return (0);
 }
