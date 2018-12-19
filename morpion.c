@@ -1,6 +1,7 @@
 //IA pour un morpion en arbre
 
 #include "libft/libft.h"
+#include <time.h>
 #include <stdio.h>
 
 /*# define TRUE 1
@@ -27,7 +28,7 @@ typedef struct	s_AI
 	char	**savegrid;
 }		t_AI;
 
-void	init(t_morpion *var)
+void	init(t_morpion *var, t_AI *AI)
 {
 	int	i;
 	
@@ -43,6 +44,7 @@ void	init(t_morpion *var)
 	var->line = NULL;
 	var->choice = 0;
 	var->game = 1;
+	AI->savegrid = NULL;
 }
 
 void	ft_print_grid(t_morpion *var)
@@ -87,6 +89,9 @@ int	ft_n_empty(char **grid)
 
 int	ft_end(char **grid)
 {
+	//printf("CASES VIDES : %i\n", ft_n_empty(grid));
+	if (!ft_n_empty(grid))
+		return (1);
 	if (grid[0][0] == grid[0][1] && grid[0][0] == grid[0][2] && grid[0][0] != ' ')
 		return (1);
 	if (grid[1][0] == grid[1][1] && grid[1][0] == grid[1][2] && grid[1][0] != ' ')
@@ -112,7 +117,7 @@ void	fill_i(char ***grid, int n, char turn)
 	int j;
 	int count;
 
-	printf("Placement d'un symbole, n = %i, turn : %c\n", n, turn);
+	//printf("Placement d'un symbole, n = %i, turn : %c\n", n, turn);
 	count = 1; 
 	i = -1;
 	while ((*grid)[++i])
@@ -179,6 +184,7 @@ int	ft_eval(char **grid)
 					grade += 5* sign;
 			}
 	}
+	//grade = 0;
 	printf("Final grade : %i\n", grade);
 	return (grade);
 }
@@ -197,7 +203,7 @@ int	ft_previsions(t_morpion *var, char **grid, t_AI *AI, char turn)
 	savegrid = ft_gridcpy(grid);
 	sum = 0;
 	i = -1;
-	if (AI->step == var->AI)
+	if (AI->step == var->AI || npos == 0)
 	{
 		printf("Map recu pour l'evaluation : \n");
 		ft_print_grid(var);
@@ -206,10 +212,11 @@ int	ft_previsions(t_morpion *var, char **grid, t_AI *AI, char turn)
 	else
 		while (++i < npos)
 		{
-			printf("Nouvelle posibilite\n");
-			fill_i(&grid, i, turn);
+			fill_i(&grid, i + 1, turn);
 			if (ft_end(grid))
-				sum += (turn == 'O' ? -50 : 50);
+				sum += (turn == 'O' ?
+				-10000 / (AI->step * AI->step * AI->step + 0.2) :
+				10000 / (AI->step * AI->step * AI->step + 0.2));
 			else
 				sum += ft_previsions(var, grid, AI, turn);	
 			ft_griddel(&grid);
@@ -226,22 +233,21 @@ void	ft_AI_turn(t_morpion *var, t_AI *AI)
 	int	best;
 	int	besti;
 
-	printf("Debut reflexion IA\n");
+	printf("Debut reflexion IA, savegrid : %p\n", AI->savegrid);
 	if (AI->savegrid)
 		ft_griddel(&AI->savegrid);	
 	AI->savegrid = ft_gridcpy(var->grid);
 	AI->step = -1;
-	best = -50;
 	i = -1;
 	while (++i < AI->nchoice)
 	{
-		printf("Pos. numéro : %i\t-\tNiveau reflexion : %i\n", i, AI->step);
+		printf("Pos. numéro : %i\t-\tNiveau reflexion : %i\n", i + 1, AI->step);
 		fill_i(&var->grid, i + 1, 'X');
 		if (ft_end(var->grid))
-			AI->choices[i] = 50;
+			AI->choices[i] = 50000; //!8/8 = 5040 simulations ~= 30.000 grade. 50.000 > 30.000
 		else
 			AI->choices[i] = ft_previsions(var, var->grid, AI, var->turn);
-		if (AI->choices[i] > best)
+		if (AI->choices[i] > best || i == 0)
 		{
 			best = AI->choices[i];
 			besti = i;
@@ -251,15 +257,21 @@ void	ft_AI_turn(t_morpion *var, t_AI *AI)
 		ft_griddel(&var->grid);
 		var->grid = ft_gridcpy(AI->savegrid);
 	}
+	printf("Tout les scores : \n");
+	i = -1;
+	while (++i < AI->nchoice)
+		printf("Cases n°%i : %i\n", i, AI->choices[i]);
 	printf("Best case : %i\n", besti + 1);
 	fill_i(&var->grid, besti + 1, 'X');
 }
 
-void	morpion(t_morpion *var, t_AI *AI)
+int	morpion(t_morpion *var, t_AI *AI, int mode)
 {
 	int firsttry;
 
 	ft_print_grid(var);
+	srand(time(NULL));
+	var->turn = (random() % 2 ? 'X' : 'O');
 	while (!(var->game = ft_end(var->grid)))
 	{
 		var->turn = (var->turn == 'O' ? 'X' : 'O');
@@ -273,10 +285,15 @@ void	morpion(t_morpion *var, t_AI *AI)
 				firsttry = 1;
 				while (var->choice < 1 || var->choice > 9 || firsttry == 1)
 				{
-					ft_putstr("Make your choose : ");
 					firsttry = 0;
-					get_next_line(1, &var->line);				//()
-					var->choice = ft_atoi(var->line);
+					if (mode == 1)
+					{
+						ft_putstr("Make your choose : ");
+						get_next_line(1, &var->line);
+						var->choice = ft_atoi(var->line);
+					}
+					else
+						var->choice = random() % 10;
 				}
 			}
 			var->grid[(var->choice - 1) / 3][(var->choice - 1) % 3] = 'O';	
@@ -293,54 +310,51 @@ void	morpion(t_morpion *var, t_AI *AI)
 	}
 	if (var->turn == 'O')
 		ft_print_grid(var);
-	ft_putstr("Player win : ");
-	ft_putstr(var->turn == 'O' ? "You" : "AI");
-}
-
-void	ft_test()
-{
-	char **tab;
-	char **savetab;
-	int i = -1;
-
-	tab = (char **)malloc(sizeof(char *) * 4);
-	tab[0] = ft_strdup(" O ");
-	tab[1] = ft_strdup("O O");
-	tab[2] = ft_strdup(" O ");
-	tab[3] = NULL;
-	while (++i < 3)
-		printf("%s\n", tab[i]);
-	
-	savetab = ft_gridcpy(tab);
-	
-	tab[1][1] = 'X';
-
-	i = -1;
-	while (++i < 3)
-		printf("%s\n", tab[i]);
-	
-	ft_griddel(&tab);
-	tab = ft_gridcpy(savetab);
-
-	fill_i(&tab, 2, 'A');
-	i = -1;
-	while (++i < 3)
-		printf("%s\n", tab[i]);
+	if (!ft_n_empty(var->grid))
+		ft_putendl("Equality !");
+	else
+	{
+		ft_putstr("Player win : ");
+		ft_putstr(var->turn == 'O' ? "You" : "AI");
+	}
+	return (var->turn == 'O' ? 0 : 1);
 }
 
 int	main(int ac, char **av)
 {
 	t_morpion	var;
 	t_AI		AI;
-	
+	int		i;
+	int		pAI;
+	int		prandom;
+
 	//ft_test();
 	//return (0);
+	pAI = 0;
+	prandom = 0;
+	i = -1;
 	if (ac == 2 && ft_strlen(av[1]) == 1 && ((var.AI = av[1][0] - '0') == 0
-	|| (var.AI = ft_atoi(av[1])) != 0) && var.AI >= 0 && var.AI <= 5)
+	|| (var.AI = ft_atoi(av[1])) != 0) && var.AI >= 0 && var.AI <= 8)
+	{	
+		init(&var, &AI);
+		pAI = morpion(&var, &AI, 1);
+	}
+	else if (ac == 3 && ft_strlen(av[1]) == 1 && ((var.AI = av[1][0] - '0') == 0
+	|| (var.AI = ft_atoi(av[1])) != 0) && var.AI >= 0 && var.AI <= 8 && 
+	ft_atoi(av[2]) != 0)
 	{
-		init(&var);
-		var.turn = (random() % 2 ? 'X' : 'O');
-		morpion(&var, &AI);
+		while (++i < ft_atoi(av[2]))
+		{
+			init(&var, &AI);
+			if (morpion(&var, &AI, 2))
+				pAI++;
+			else
+				prandom++;
+			ft_putstr("\nPoints IA : ");
+			ft_putnbr(pAI);
+			ft_putstr("\nPoints random : ");
+			ft_putnbr(prandom);
+		}
 	}
 	else
 		ft_putstr("usage: ./morpion_AI strenght_of_AI[0;5]");
