@@ -171,6 +171,7 @@ int	ft_eval(char **grid)
 	{
 		j = -1;
 		while (++j < 3)
+		{
 			if (grid[i][j] == 'O' || grid[i][j] == 'X')
 			{
 				sign = (grid[i][j] == 'O' ? -1 : 1);
@@ -180,8 +181,16 @@ int	ft_eval(char **grid)
 					grade += 2 * sign;
 				else
 					grade += 5* sign;
+				/*if (grid[i][j] == 'O')
+				{
+					//Test 2 align
+					//Puis attribu le point selon le 3
+				}*/
 			}
+			
+		}
 	}
+
 	//printf("Final grade : %i\n", grade);
 	//grade = 0;
 	return (grade);
