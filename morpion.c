@@ -1,6 +1,6 @@
 //IA pour un morpion en arbre
 
-#include "libft/libft.h"
+#include "libft.h"
 #include <time.h>
 #include <stdio.h>
 
@@ -155,7 +155,7 @@ void	ft_griddel(char ***grid)
 	while (++i < 3)
 		ft_strdel(*grid + i);
 	free(*grid);
-	grid = NULL;
+	*grid = NULL;
 }
 
 int	ft_eval(char **grid)
@@ -190,7 +190,6 @@ int	ft_eval(char **grid)
 			
 		}
 	}
-
 	//printf("Final grade : %i\n", grade);
 	//grade = 0;
 	return (grade);
@@ -226,7 +225,7 @@ int	ft_previsions(t_morpion *var, char **grid, t_AI *AI, char turn)
 				10000 / (AI->step * AI->step * AI->step + 0.2));
 			else
 				sum += ft_previsions(var, grid, AI, turn);	
-			ft_griddel(&grid);
+			//ft_griddel(&grid);
 			grid = ft_gridcpy(savegrid);
 		}
 	AI->step--;
@@ -263,10 +262,10 @@ void	ft_AI_turn(t_morpion *var, t_AI *AI)
 		ft_griddel(&var->grid);
 		var->grid = ft_gridcpy(AI->savegrid);
 	}
-	printf("Tout les scores : \n");
+	//printf("Tout les scores : \n");
 	i = -1;
-	while (++i < AI->nchoice)
-		printf("Cases n°%i : %i\n", i, AI->choices[i]);
+	//while (++i < AI->nchoice)
+		//printf("Cases n°%i : %i\n", i, AI->choices[i]);
 	fill_i(&var->grid, besti + 1, 'X');
 }
 
@@ -305,7 +304,7 @@ int	morpion(t_morpion *var, t_AI *AI, int mode)
 		}
 		else
 		{
-			printf("Debut tour IA\n");
+			//printf("Debut tour IA\n");
 			AI->nchoice = ft_n_empty(var->grid);
 			AI->choices = (int *)malloc(sizeof(int) * AI->nchoice);
 			ft_AI_turn(var, AI);
